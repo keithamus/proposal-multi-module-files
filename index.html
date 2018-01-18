@@ -1,0 +1,382 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Multi Module Files in JS</title>
+
+		<link rel="stylesheet" type="text/css" href="css/reveal.css">
+		<link rel="stylesheet" type="text/css" href="css/github.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" type="application/javascript" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+        <section>
+          <h1>Multi Module Files</h1>
+        </section>
+
+        <section>
+          <h3>Rule: A file that imports others, should still be valid when replacing those lines with their file contents<h3>
+        </section>
+
+        <section>
+          <h3>Rule: A module system should be simple enough to string together with awk/grep/sed<h3>
+        </section>
+
+        <section>
+          <h3>C/C++</h3>
+          <pre>
+            <code class="hljs c">
+//add.c
+int add(int a, int b) {
+  return a + b;
+}
+
+//main.c
+#include "add.c"
+int main() {
+  printf( "%d", add(1, 1) );
+  return 0;
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>C/C++ - single file</h3>
+          <pre>
+            <code class="hljs c">
+//add.c
+int add(int a, int b) {
+  return a + b;
+}
+
+//main.c
+#include "add.h"
+int main() {
+  printf( "%d", add(1, 1) );
+  return 0;
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>gcc -e main.c</h3>
+          <pre>
+            <code class="hljs c"># 1 "main.c"
+# 1 "&lt;built-in&gt;" 1
+# 1 "&lt;built-in&gt;" 3
+# 331 "&lt;built-in&gt;" 3
+# 1 "&lt;command line&gt;" 1
+# 1 "&lt;built-in&gt;" 2
+# 1 "main.c" 2
+# 1 "./add.c" 1
+int add(int a, int b) {
+  return a + b;
+}
+# 2 "main.c" 2
+int main() {
+  printf( "%d", add(1, 1) );
+  return 0;
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>Rust</h3>
+          <pre>
+            <code class="hljs rust">
+//add.rs
+pub fn add(a: i32, b: i32) -&gt; i32 {
+  a + b
+}
+
+//main.rs
+mod add;
+fn main() {
+  println!("{}", add::add(1, 1));
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>Rust - single file</h3>
+          <pre>
+            <code class="hljs rust">
+//main.rs
+mod add {
+    pub fn add(a: i32, b: i32) -&gt; i32 {
+      a + b
+    }
+}
+fn main() {
+  println!("{}", add::add(1, 1));
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>Ruby</h3>
+          <pre>
+            <code class="hljs ruby">
+# add.rb
+def add(a, b)
+  a + b
+end
+
+# main.rb
+require_relative "add.rb"
+
+def main
+  puts add(1, 1)
+end
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>Ruby - single file</h3>
+          <pre>
+            <code class="hljs ruby">
+# main.rb
+def add(a, b)
+  a + b
+end
+
+def main
+  puts add(1, 1)
+end
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>JavaScript</h3>
+          <pre>
+            <code class="hljs javascript">
+//add.js
+export default function add(a, b) {
+  return a + b
+}
+
+//main.js
+import add from 'add.js'
+
+function main() {
+  console.log(add(1, 1))
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>JavaScript - Single File</h3>
+          <pre>
+            <code class="hljs javascript">
+//main.js
+/*export default (?) */ function add(a, b) {
+  return a + b
+}
+
+function main() {
+  console.log(add(1, 1))
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>JavaScript</h3>
+          <pre>
+            <code class="hljs javascript">
+//add.js
+export default function add() { return a + b }
+
+//main.js
+import plus from "add.js"
+function main() {
+  return plus(1, 1)
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>JavaScript</h3>
+          <pre>
+            <code class="hljs javascript">
+//add.js
+export default function add() { return a + b }
+function add() { throw Error('not this one') }
+
+//main.js
+import add from "add.js"
+function main() {
+  return add(1, 1)
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>Why is this a problem?</h3>
+          <ul>
+            <li class=fragment>ES6 Modules fine for authoring, but not web-shippable</li>
+            <li class=fragment>H2 might solve this, but adds more complexity</li>
+            <li class=fragment>Still relying on AMD or custom module "registries"</li>
+            <li class=fragment>Vendor.js still a thing</li>
+            <li class=fragment>All we need is a hook to inject modules!</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>What about Rollup/Webpack?</h3>
+          <ul class=fragment>
+            <li>Webpack still uses its own <strong>custom registry</strong></li>
+            <li>Webpack CommonsChunk helpful - but creates thrashing of vendor modules</li>
+          </ul>
+          <ul class=fragment>
+            <li>Rollup just landed code-splitting (ala CommonsChunk)</li>
+            <li>Still has thrashing problems, due to inherent treeshaking</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>JavaScript - New Single File Mode?</h3>
+          <pre>
+            <code class="hljs javascript">
+//main.js
+module "add" {
+  export default function add(a, b) {
+    return a + b
+  }
+}
+
+import add from "add"
+
+function main() {
+  return add(1, 1)
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>High Level Semantics</h3>
+          <ul>
+            <li><code>module</code> injects dependency</li>
+            <li>ignores upper scope</li>
+            <li>can import/export inside of itself</li>
+            <li>cannot declare modules inside itself</li>
+            <li>decouples modules from single files</li>
+            <li>`module` not allowed after `import`</li>
+            <li>`module` scopes resolved at end</li>
+            <li>works with <code>import()</code> and <code>import</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Old amd example</h3>
+          <pre>
+            <code class="hljs javascript">
+//vendor.js
+define("add", function(exports) {
+  exports.default = (a, b) =&gt; a + b
+})
+define("sub", function(exports) {
+  exports.default = (a, b) =&gt; a - b
+})
+
+//main.js
+define(["add", "sub"], function ({add, sub}) {
+  function main() {
+    add(sub(2, 1), 1)
+  }
+})
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>New module example</h3>
+          <pre>
+            <code class="hljs javascript">
+//vendor.js
+module "sub" {
+  export default function sub(a, b) { return a - b }
+}
+module "add" {
+  export default function add(a, b) { return a + b }
+}
+
+//main.js
+import add from "add"
+import sub from "sub"
+function main() {
+  add(sub(2, 1), 1)
+}
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h3>More complex example</h3>
+          <pre>
+            <code class="hljs javascript">module "math" {
+  import add from "add"
+  import sub from "sub"
+  export {sub, add}
+}
+module "sub" {
+  export default function sub(a, b) { return a - b }
+}
+module "add" {
+  export default function add(a, b) { return a + b }
+}
+import {add,sub} from "math"
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <h2>Questions?</h2>
+        </section>
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
